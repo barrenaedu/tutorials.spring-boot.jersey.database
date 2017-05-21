@@ -16,48 +16,24 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<java.version>1.8</java.version>
+		<jdk.version>1.8</jdk.version>
 	</properties>
 
 	<dependencies>
-		<!-- Spring Boot (Manual setup) -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-		<dependency>
-            <groupId>org.glassfish.jersey.ext</groupId>
-            <artifactId>jersey-spring3</artifactId>
-        </dependency>
 		 
-		<!-- Jersey (Spring boot setup) -->
-		<!--  
+		<!-- Spring Boot + Jersey -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-jersey</artifactId>
 		</dependency>
-        -->
-        
-        
-        
-        
         
 		<!-- Spring Boot Test -->
-		<!-- 
 		<dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-         -->
-		<!-- 
-        
-        <dependency>
-            <groupId>com.jayway.jsonpath</groupId>
-            <artifactId>json-path</artifactId>
-            <scope>test</scope>
-        </dependency>
-         -->
+
 	</dependencies>
 
 	<build>
