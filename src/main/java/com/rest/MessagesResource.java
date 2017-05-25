@@ -1,13 +1,18 @@
 package com.rest;
 
+import java.util.Collection;
+
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -24,46 +29,54 @@ public class MessagesResource {
 	public MessagesResource(MessageManager messageManager) {
 		this.messageManager = messageManager;
 	}
-
-//	@GET
-//	@Produces(MediaType.APPLICATION_JSON)
-//	public Response getMessages() {
-//		Collection<Message> msgs = messageManager.getMessages();
-//		return Response.ok().entity(msgs).build();
-//	}
-
-	@GET
-	@Path("/{id}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response getMessage(@PathParam("id") Long id) {
-		Message msg = messageManager.getMessage(id);
-		return Response.ok().entity(msg).build();
-	}
-
+	
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response createMessage(Message msg) {
 		Message newMsg = messageManager.createMessage(msg);
-		return Response.ok().entity(newMsg).build();
+		return Response.status(Status.CREATED).entity(newMsg).build();
 	}
-
-//
-//	@PUT
-//	@Path("/{id}")
-//	@Consumes(MediaType.APPLICATION_JSON)
-//	@Produces(MediaType.APPLICATION_JSON)
-//	public Response updateMessage(@PathParam("id") Long id, @PathParam("message") Message msg) {
-//		messageManager.updateMessage(msg);
-//		return Response.ok().build();
-//	}
-//
-//	@DELETE
-//	@Path("/{id}")
-//	public Response deleteMessage(@PathParam("id") Long id) {
-//		messageManager.deleteMessage(id);
-//		// TODO Should be code 202?
-//		return Response.ok().build();
-//	}
+	
+	@PUT
+	@Path("/{id}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response updateMessage(@PathParam("id") long id, Message msg) {
+		if (msg.getId() != id) {
+			throw new IllegalArgumentException("Object id cannot be different than the parameter id");
+		}
+		if (messageManager.updateMessage(msg)) {
+			return Response.status(Status.OK).build();
+		}
+		return Response.status(Status.NOT_FOUND).build();
+	}
+	
+	@DELETE
+	@Path("/{id}")
+	public Response deleteMessage(@PathParam("id") long id) {
+		if (messageManager.deleteMessage(id)) {
+			return Response.status(Status.OK).build();			
+		}
+		return Response.status(Status.NOT_FOUND).build();
+	}
+	
+	@GET
+	@Path("/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getMessage(@PathParam("id") long id) {
+		Message msg = messageManager.getMessage(id);
+		if (msg != null) {
+			return Response.status(Status.OK).entity(msg).build();
+		}
+		return Response.status(Status.NOT_FOUND).build();
+	}
+	
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getMessages() {
+		Collection<Message> msgs = messageManager.getMessages();
+		return Response.status(Status.OK).entity(msgs).build();
+	}
 
 }

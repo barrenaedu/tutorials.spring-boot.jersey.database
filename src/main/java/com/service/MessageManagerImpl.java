@@ -14,19 +14,21 @@ public class MessageManagerImpl implements MessageManager {
 
 	@Override
 	public Message createMessage(Message msg) {
-		Message newMsg = new Message.MessageBuilder().id(messages.size() + 1).text(msg.getText()).build();
+		Message newMsg = new Message();
+		newMsg.setId(messages.size() + 1);
+		newMsg.setText(msg.getText());
 		messages.put(newMsg.getId(), newMsg);
 		return newMsg;
 	}
 
 	@Override
-	public void updateMessage(Message msg) {
-		messages.replace(msg.getId(), msg);
+	public boolean updateMessage(Message msg) {
+		return messages.replace(msg.getId(), msg) != null;
 	}
 	
 	@Override
-	public void deleteMessage(long id) {
-		messages.remove(id);		
+	public boolean deleteMessage(long id) {
+		return messages.remove(id) != null;		
 	}
 
 	@Override

@@ -3,6 +3,11 @@ package com.rest;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.function.BiPredicate;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,85 +23,117 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.domain.Message;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class MessagesResourceTest {
-	private static final String RESOURCE_URL = "/rest/messages";
+	private static final String RESOURCE_URL = "/rest/messages/";
+	
+	@Autowired
+	private final ObjectMapper jsonMapper = new ObjectMapper();
 	
 	@Autowired
 	private TestRestTemplate restTemplate;
 
-//	@Before
-//	public void setUp() throws Exception {
-//		
-//	}
 	@Test
 	public void testCreateMessage() throws Exception {
-		String TEXT = "The chosen one";
-		Message msg = new Message.MessageBuilder().text(TEXT).build();
-	    HttpHeaders headers = new HttpHeaders();
-	    headers.setContentType(MediaType.APPLICATION_JSON);
-//	    headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));	
-	    // (java.lang.String) {"id":1,"text":"Hello World"}
-//	    ResponseEntity<Message> response = restTemplate.exchange(RESOURCE_URL, HttpMethod.POST, new HttpEntity<Message>(msg, headers), Message.class);
-//	    ResponseEntity<String> response = restTemplate.exchange(RESOURCE_URL, HttpMethod.POST, new HttpEntity<Message>(msg, headers), String.class);
-	    ResponseEntity<String> response = restTemplate.exchange(RESOURCE_URL, HttpMethod.POST, new HttpEntity<String>("{\"text\":\"Hello World\"}", headers), String.class);
+		String text = "The chosen one";
+		ResponseEntity<Message> response = createMessage(text);
+	    assertEquals(HttpStatus.CREATED, response.getStatusCode());
+	    assertTrue(response.getBody().getId() > 0);
+	    assertEquals(text, response.getBody().getText());
+	}
+	
+	@Test
+	public void testUpdateMessage() throws Exception {
+		Message message = createMessage("The message from 'testUpdateMessage' method").getBody();
+		Message updatedMsg = new Message();
+		updatedMsg.setText("The updated text");
+		updatedMsg.setId(message.getId());
+		// update present
+		ResponseEntity<String> response = updateMessage(updatedMsg);
 	    assertEquals(HttpStatus.OK, response.getStatusCode());
-	    JsonNode node = new ObjectMapper().readValue(response.getBody(), JsonNode.class);
-	    assertTrue(node.get("id").asLong() > 0);
-//	    assertEquals(TEXT, response.getBody().getText());
-	    
-//		ResponseEntity<String> entity = testRestTemplate.getForEntity("https://localhost:" + this.port, String.class);
-
-		
-//		restTemplate.postForEntity(RESOURCE_URL, msg, responseType)
-		
-//		String body = restTemplate.getForObject("/rest/messages/", String.class);
-		
+	    message = getMessage(message.getId()).getBody();
+	    assertEquals(updatedMsg.getText(), message.getText());
+	    // update not present
+		updatedMsg.setId(Long.MAX_VALUE);
+	    response = updateMessage(updatedMsg);
+	    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+	}
+	
+	@Test
+	public void testDeleteMessage() throws Exception {
+		Message msg = createMessage("The message from 'testDeleteMessage' method").getBody();
+		// delete
+		ResponseEntity<String> responseDel = deleteMessage(msg.getId());
+	    assertEquals(HttpStatus.OK, responseDel.getStatusCode());
+	    // check deleted
+	    ResponseEntity<Message> responseGet = getMessage(msg.getId());
+		assertEquals(HttpStatus.NOT_FOUND, responseGet.getStatusCode());
 	}
 	
 	@Test
 	public void testGetMessage() throws Exception {
-		long MESSAGE_ID = 1l;
-		ResponseEntity<String> response = restTemplate.getForEntity("/rest/messages/" + MESSAGE_ID, String.class);
+		// get valid message
+		Message msg = createMessage("The message from 'testGetMessage' method").getBody();
+		ResponseEntity<Message> response = getMessage(msg.getId());
 		assertEquals(HttpStatus.OK, response.getStatusCode());
-	    JsonNode node = new ObjectMapper().readValue(response.getBody(), JsonNode.class);
-		assertEquals(MESSAGE_ID, node.get("id").asLong());
+		assertEquals(msg.getId(), response.getBody().getId());
+		assertEquals(msg.getText(), response.getBody().getText());
+		// get invalid message
+		response = getMessage(Long.MAX_VALUE);
+		assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());		
 	}
-
-	/*
-	OAuth2AccessToken token = context.getAccessToken();
-    HttpHeaders headers = new HttpHeaders();
-    headers.set("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE);
-    @SuppressWarnings("rawtypes")	 * 
-	ResponseEntity<Map> response = new TestRestTemplate("my-client-with-secret", "secret")
-	response.exchange(http.getUrl(checkTokenPath()), HttpMethod.POST, new HttpEntity<String>("token=" + token.getValue(), headers), Map.class);
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-	 */
 	
-	/*
-	headers.setAccept(Arrays.asList(MediaType.TEXT_HTML));
-    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-    MultiValueMap<String, String> form = new LinkedMultiValueMap<String, String>();
-    form.set("username", "user");
-    form.set("password", "user");
-    
-    ResponseEntity<String> entity = new TestRestTemplate().exchange(
-        "http://localhost:" + this.port + "/login", HttpMethod.POST,
-        new HttpEntity<MultiValueMap<String, String>>(form, headers),
-        String.class);
-        
-    assertEquals(HttpStatus.FOUND, entity.getStatusCode());
-    assertTrue("Wrong location:\n" + entity.getHeaders(), entity.getHeaders()
-	 */
+	@Test
+	public void testGetMessages() throws Exception {
+		// create messages
+		Message msg1 = createMessage("The message 1 from 'testGetMessages' method").getBody();
+		Message msg2 = createMessage("The message 2 from 'testGetMessages' method").getBody();
+		// get messages
+		ResponseEntity<Collection<Message>> response = getMessages();
+		assertEquals(HttpStatus.OK, response.getStatusCode());
+		assertTrue(response.getBody().size() >= 2);
+	    BiPredicate<Message, Message> equals = (x, y) -> x.getId() == y.getId() && Objects.equals(x.getText(), y.getText());
+		assertTrue(response.getBody().stream().anyMatch(msg -> equals.test(msg, msg1) || equals.test(msg, msg2)));
+	}
 	
-	/*
-	ResponseEntity<String> entity = testRestTemplate.getForEntity("https://localhost:" + this.port, String.class);
-	assertEquals(HttpStatus.OK, entity.getStatusCode());
-	assertEquals("Hello, Secret Property: chupacabras", entity.getBody());
-	 */
+	// ***********************
+	// *** Private methods ***
+	// ***********************
+	
+	private ResponseEntity<Collection<Message>> getMessages() {
+		ResponseEntity<Message[]> response = restTemplate.getForEntity("/rest/messages/", Message[].class);
+		return ResponseEntity.status(response.getStatusCode()).body(Arrays.asList(response.getBody()));
+	}
+	
+	private ResponseEntity<String> updateMessage(Message msgUpdated) {
+		HttpHeaders headers = new HttpHeaders();
+	    headers.setContentType(MediaType.APPLICATION_JSON);
+	    return restTemplate.exchange(RESOURCE_URL + msgUpdated.getId(), HttpMethod.PUT, new HttpEntity<Message>(msgUpdated, headers), String.class);
+	}
+	
+	private ResponseEntity<Message> createMessage(String text) {
+		Message msg = new Message();
+		msg.setText(text);
+	    HttpHeaders headers = new HttpHeaders();
+	    headers.setContentType(MediaType.APPLICATION_JSON);
+	    return restTemplate.exchange(RESOURCE_URL, HttpMethod.POST, new HttpEntity<Message>(msg, headers), Message.class);
+	}
+	
+	private ResponseEntity<Message> getMessage(long id) throws Exception {
+		ResponseEntity<String> response = restTemplate.getForEntity(RESOURCE_URL + id, String.class);
+		if (response.getStatusCode() == HttpStatus.OK) {
+			return ResponseEntity.status(response.getStatusCode()).body(jsonMapper.readValue(response.getBody(), Message.class));
+		}
+		return ResponseEntity.status(response.getStatusCode()).build();
+	}
+	
+	private ResponseEntity<String> deleteMessage(long id) {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		return restTemplate.exchange(RESOURCE_URL + id, HttpMethod.DELETE, new HttpEntity<Message>(headers), String.class);
+	}
 
 }

@@ -8,9 +8,9 @@ public interface MessageManager {
 
 	public Message createMessage(Message msg);
 	
-	public void updateMessage(Message msg);
+	public boolean updateMessage(Message msg);
 	
-	public void deleteMessage(long id);
+	public boolean deleteMessage(long id);
 
 	public Message getMessage(long id);
 	
