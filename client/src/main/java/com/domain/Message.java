@@ -1,5 +1,8 @@
 package com.domain;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
 public class Message {
 	private long id;
 	private String text;

@@ -3,7 +3,7 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>tutorials.spring-boot</groupId>
-	<artifactId>tutorials.spring-boot.jersey</artifactId>
+	<artifactId>tutorials.spring-boot.jersey-server</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<name>Spring Boot + Jersey Webapp</name>
 	<url>http://codeboarding.com</url>
@@ -11,13 +11,14 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.5.3.RELEASE</version>
+		<version>1.5.3.RELEASE</version>	
 	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jdk.version>1.8</jdk.version>
 		<java.version>1.8</java.version>
+		<jersey-jaxb.version>1.8</jersey-jaxb.version>
 	</properties>
 
 	<dependencies>
@@ -43,9 +44,20 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+ 			
+			<!-- JDK Compiler Level -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>${jdk.version}</source>
+					<target>${jdk.version}</target>
+				</configuration>
+			</plugin>
+			
 		</plugins>
 	</build>
-    
+
 	<repositories>
 		<repository>
 			<id>spring-releases</id>
