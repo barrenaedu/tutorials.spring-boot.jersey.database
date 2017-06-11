@@ -18,7 +18,6 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jdk.version>1.8</jdk.version>
 		<java.version>1.8</java.version>
-		<jersey-jaxb.version>1.8</jersey-jaxb.version>
 	</properties>
 
 	<dependencies>

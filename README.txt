@@ -17,6 +17,12 @@ Rest returned codes
 Json
 	http://tutorials.jenkov.com/java-json/jackson-objectmapper.html
 
+Information of headers
+    @Context HttpHeaders headers
+
+WADL Generation
+    http://localhost:8080/rest/application.wadl
+
 More info
 	https://jersey.github.io/
 	https://github.com/jersey/jersey
@@ -26,23 +32,3 @@ More info
 	http://www.massapi.com/class/te/TestRestTemplate.html
 	http://docs.spring.io/autorepo/docs/spring-android/1.0.x/reference/html/rest-template.html
 	
-	
-<jersey.version>2.25.1</jersey.version>
-	
-	
-================================================0
-
-- Parameter annotations (P20)
-- Scope of the root-resource classes (P29)
-
-p35
-
-
-mvn archetype:generate -DgroupId=spring.rest -DartifactId=spring.rest.simple-consumer -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
-
-{accept=[application/json], user-agent=[Jersey/2.25 (HttpUrlConnection 1.8.0_131)], host=[localhost:8080], connection=[keep-alive]}
-{accept=[application/xml], user-agent=[Jersey/2.25 (HttpUrlConnection 1.8.0_131)], host=[localhost:8080], connection=[keep-alive]}
-{accept=[text/xml], user-agent=[Jersey/2.25 (HttpUrlConnection 1.8.0_131)], host=[localhost:8080], connection=[keep-alive]}
-
-
-@Context HttpHeaders headers
