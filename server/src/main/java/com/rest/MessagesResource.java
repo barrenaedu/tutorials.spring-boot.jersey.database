@@ -10,10 +10,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.ext.ExceptionMapper;
 import java.util.Collection;
 
 @Path("/messages")
-public class MessagesResource {
+public class MessagesResource implements ExceptionMapper<Throwable> {
     private final MessageManager messageManager;
     private int counter;
 
@@ -38,18 +39,20 @@ public class MessagesResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response updateMessage(@PathParam("id") long id, Message msg) {
         try {
-            Message dbMsg = messageManager.getMessage(id);
-            if (dbMsg == null) {
-                throw new IllegalArgumentException("Resource not found");
-            }
             if (msg.getId() != id) {
                 throw new IllegalArgumentException("Object id cannot be different than the parameter id");
             }
-            msg.setId(dbMsg.getId());
+            Message dbMsg = messageManager.getMessage(id);
+            if (dbMsg == null) {
+                throw new IllegalArgumentException(String.format("Message id '%d' does not exists!", id));
+            }
             messageManager.updateMessage(msg);
             return Response.status(Status.OK).build();
         } catch (Exception e) {
-            return Response.status(Status.NOT_FOUND).entity(e.getMessage()).build();
+            return Response.status(Status.NOT_FOUND)
+                    .entity(e.getMessage())
+                    .type(MediaType.APPLICATION_JSON)
+                    .build();
         }
     }
 
@@ -59,12 +62,15 @@ public class MessagesResource {
         try {
             Message msg = messageManager.getMessage(id);
             if (msg == null) {
-                throw new Exception("Resource not found");
+                throw new Exception(String.format("Message id '%d' does not exists!", id));
             }
             messageManager.deleteMessage(msg.getId());
             return Response.status(Status.OK).build();
         } catch (Exception e) {
-            return Response.status(Status.NOT_FOUND).build();
+            return Response.status(Status.NOT_FOUND)
+                    .entity(e.getMessage())
+                    .type(MediaType.APPLICATION_JSON)
+                    .build();
         }
     }
 
@@ -72,11 +78,18 @@ public class MessagesResource {
     @Path("/{id}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response getMessage(@PathParam("id") long id) {
-        Message msg = messageManager.getMessage(id);
-        if (msg != null) {
+        try {
+            Message msg = messageManager.getMessage(id);
+            if (msg == null) {
+                throw new Exception(String.format("Message id '%d' does not exists!", id));
+            }
             return Response.status(Status.OK).entity(msg).build();
+        } catch (Exception e) {
+            return Response.status(Status.NOT_FOUND)
+                    .entity(e.getMessage())
+                    .type(MediaType.APPLICATION_JSON)
+                    .build();
         }
-        return Response.status(Status.NOT_FOUND).build();
     }
 
     @GET
@@ -92,6 +105,14 @@ public class MessagesResource {
     public Response getCounter() {
         counter++;
         return Response.status(Status.OK).entity(counter).build();
+    }
+
+    @Override
+    public Response toResponse(Throwable ex) {
+        return Response.status(Status.INTERNAL_SERVER_ERROR)
+                .entity(ex.getMessage())
+                .type(MediaType.APPLICATION_JSON)
+                .build();
     }
 
 }
