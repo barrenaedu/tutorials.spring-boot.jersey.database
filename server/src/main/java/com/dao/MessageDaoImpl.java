@@ -48,8 +48,10 @@ public class MessageDaoImpl extends NamedParameterJdbcDaoSupport implements Mess
     public void updateMessage(Message msg) {
         String sql = "UPDATE " + TABLE_NAME + " SET " +
                 Column.TEXT.toString() + "=:" + Column.TEXT.toString() + ", " +
-                Column.SELECTED.toString() + "=:" + Column.SELECTED.toString();
+                Column.SELECTED.toString() + "=:" + Column.SELECTED.toString() + " " +
+                "WHERE " + Column.ID.toString() + "=:" + Column.ID.toString();
         MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue(Column.ID.toString(), id);
         params.addValue(Column.TEXT.toString(), msg.getText());
         params.addValue(Column.SELECTED.toString(), BooleanUtils.toInteger(msg.isSelected()));
         getNamedParameterJdbcTemplate().update(sql, params);
