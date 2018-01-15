@@ -1,30 +1,46 @@
 package com.domain;
 
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class Message {
-	private long id;
-	private String text;
 
-	public Message() {
-		
-	}
-	
-	public void setId(long id) {
-		this.id = id;
-	}
-	
-	public long getId() {
-		return id;
-	}
+    @XmlAttribute
+    private long id;
 
-	public String getText() {
-		return text;
-	}
+    @XmlAttribute
+    private String text;
 
-	public void setText(String text) {
-		this.text = text;
-	}
+    @XmlAttribute
+    private boolean selected;
+
+    public Message() {
+
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+    }
+
+    public boolean isSelected() {
+        return selected;
+    }
 
 }

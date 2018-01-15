@@ -6,13 +6,13 @@ import com.domain.Message;
 
 public interface MessageManager {
 
-	public Message createMessage(Message msg);
+	long createMessage(Message msg);
 	
-	public boolean updateMessage(Message msg);
-	
-	public boolean deleteMessage(long id);
+	void updateMessage(Message msg);
 
-	public Message getMessage(long id);
+	void deleteMessage(long id);
+
+	Message getMessage(long id);
 	
-	public Collection<Message> getMessages();
+	Collection<Message> getMessages();
 }

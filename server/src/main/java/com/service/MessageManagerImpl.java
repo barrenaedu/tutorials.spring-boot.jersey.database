@@ -4,41 +4,49 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.dao.MessageDao;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.domain.Message;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class MessageManagerImpl implements MessageManager {
-	private Map<Long, Message> messages = new HashMap<>();
 
-	@Override
-	public Message createMessage(Message msg) {
-		Message newMsg = new Message();
-		newMsg.setId(messages.size() + 1);
-		newMsg.setText(msg.getText());
-		messages.put(newMsg.getId(), newMsg);
-		return newMsg;
-	}
+    private MessageDao messageDao;
 
-	@Override
-	public boolean updateMessage(Message msg) {
-		return messages.replace(msg.getId(), msg) != null;
-	}
-	
-	@Override
-	public boolean deleteMessage(long id) {
-		return messages.remove(id) != null;		
-	}
+    @Autowired
+    public MessageManagerImpl(MessageDao messageDao) {
+        this.messageDao = messageDao;
+    }
 
-	@Override
-	public Message getMessage(long id) {
-		return messages.get(id);
-	}
+    @Transactional
+    @Override
+    public long createMessage(Message msg) {
+        return messageDao.createMessage(msg);
+    }
 
-	@Override
-	public Collection<Message> getMessages() {
-		return messages.values();
-	}
+    @Transactional
+    @Override
+    public void updateMessage(Message msg) {
+        messageDao.updateMessage(msg);
+    }
+
+    @Transactional
+    @Override
+    public void deleteMessage(long id) {
+        messageDao.deleteMessage(id);
+    }
+
+    @Override
+    public Message getMessage(long id) {
+        return messageDao.getMessage(id);
+    }
+
+    @Override
+    public Collection<Message> getMessages() {
+        return messageDao.getMessages();
+    }
 
 }

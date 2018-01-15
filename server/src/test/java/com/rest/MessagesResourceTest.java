@@ -1,29 +1,23 @@
 package com.rest;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.function.BiPredicate;
-
+import com.domain.Message;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.domain.Message;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.function.BiPredicate;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -39,22 +33,24 @@ public class MessagesResourceTest {
 	@Test
 	public void testCreateMessage() throws Exception {
 		String text = "The chosen one";
-		ResponseEntity<Message> response = createMessage(text);
+		ResponseEntity<String> response = createMessage(text);
 	    assertEquals(HttpStatus.CREATED, response.getStatusCode());
-	    assertTrue(response.getBody().getId() > 0);
-	    assertEquals(text, response.getBody().getText());
 	}
 	
 	@Test
 	public void testUpdateMessage() throws Exception {
-		Message message = createMessage("The message from 'testUpdateMessage' method").getBody();
+		// create new message
+		ResponseEntity<String> response = createMessage("The message from 'testUpdateMessage' method");
+		assertEquals(HttpStatus.CREATED, response.getStatusCode());
+		int id = Integer.valueOf(response.getBody());
+		// update
 		Message updatedMsg = new Message();
+		updatedMsg.setId(id);
 		updatedMsg.setText("The updated text");
-		updatedMsg.setId(message.getId());
-		// update present
-		ResponseEntity<String> response = updateMessage(updatedMsg);
+		response = updateMessage(updatedMsg);
 	    assertEquals(HttpStatus.OK, response.getStatusCode());
-	    message = getMessage(message.getId()).getBody();
+	    // check if was updated
+	    Message message = getMessage(id).getBody();
 	    assertEquals(updatedMsg.getText(), message.getText());
 	    // update not present
 		updatedMsg.setId(Long.MAX_VALUE);
@@ -64,39 +60,47 @@ public class MessagesResourceTest {
 	
 	@Test
 	public void testDeleteMessage() throws Exception {
-		Message msg = createMessage("The message from 'testDeleteMessage' method").getBody();
+		// create message
+		ResponseEntity<String> response = createMessage("The message from 'testDeleteMessage' method");
+		assertEquals(HttpStatus.CREATED, response.getStatusCode());
+		int id = Integer.valueOf(response.getBody());
 		// delete
-		ResponseEntity<String> responseDel = deleteMessage(msg.getId());
+		ResponseEntity<String> responseDel = deleteMessage(id);
 	    assertEquals(HttpStatus.OK, responseDel.getStatusCode());
 	    // check deleted
-	    ResponseEntity<Message> responseGet = getMessage(msg.getId());
+	    ResponseEntity<Message> responseGet = getMessage(id);
 		assertEquals(HttpStatus.NOT_FOUND, responseGet.getStatusCode());
 	}
-	
+
 	@Test
 	public void testGetMessage() throws Exception {
+		// create message
+		ResponseEntity<String> responseCreated = createMessage("The message from 'testGetMessage' method");
+		assertEquals(HttpStatus.CREATED, responseCreated.getStatusCode());
+		int id = Integer.valueOf(responseCreated.getBody());
 		// get valid message
-		Message msg = createMessage("The message from 'testGetMessage' method").getBody();
-		ResponseEntity<Message> response = getMessage(msg.getId());
-		assertEquals(HttpStatus.OK, response.getStatusCode());
-		assertEquals(msg.getId(), response.getBody().getId());
-		assertEquals(msg.getText(), response.getBody().getText());
+		ResponseEntity<Message> responseGet = getMessage(id);
+		assertEquals(HttpStatus.OK, responseGet.getStatusCode());
 		// get invalid message
-		response = getMessage(Long.MAX_VALUE);
-		assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());		
+		responseGet = getMessage(Long.MAX_VALUE);
+		assertEquals(HttpStatus.NOT_FOUND, responseGet.getStatusCode());
 	}
 	
 	@Test
 	public void testGetMessages() throws Exception {
 		// create messages
-		Message msg1 = createMessage("The message 1 from 'testGetMessages' method").getBody();
-		Message msg2 = createMessage("The message 2 from 'testGetMessages' method").getBody();
+		ResponseEntity<String> response = createMessage("The message 1 from 'testGetMessages' method");
+		assertEquals(HttpStatus.CREATED, response.getStatusCode());
+		Message msg1 = getMessage(Integer.valueOf(response.getBody())).getBody();
+		response = createMessage("The message 2 from 'testGetMessages' method");
+		assertEquals(HttpStatus.CREATED, response.getStatusCode());
+		Message msg2 = getMessage(Integer.valueOf(response.getBody())).getBody();
 		// get messages
-		ResponseEntity<Collection<Message>> response = getMessages();
-		assertEquals(HttpStatus.OK, response.getStatusCode());
-		assertTrue(response.getBody().size() >= 2);
+		ResponseEntity<Collection<Message>> responseGetAll = getMessages();
+		assertEquals(HttpStatus.OK, responseGetAll.getStatusCode());
+		assertTrue(responseGetAll.getBody().size() >= 2);
 	    BiPredicate<Message, Message> equals = (x, y) -> x.getId() == y.getId() && Objects.equals(x.getText(), y.getText());
-		assertTrue(response.getBody().stream().anyMatch(msg -> equals.test(msg, msg1) || equals.test(msg, msg2)));
+		assertTrue(responseGetAll.getBody().stream().anyMatch(msg -> equals.test(msg, msg1) || equals.test(msg, msg2)));
 	}
 	
 	// ***********************
@@ -114,12 +118,18 @@ public class MessagesResourceTest {
 	    return restTemplate.exchange(RESOURCE_URL + msgUpdated.getId(), HttpMethod.PUT, new HttpEntity<Message>(msgUpdated, headers), String.class);
 	}
 	
-	private ResponseEntity<Message> createMessage(String text) {
+	private ResponseEntity<String> createMessage(String text) {
 		Message msg = new Message();
 		msg.setText(text);
 	    HttpHeaders headers = new HttpHeaders();
 	    headers.setContentType(MediaType.APPLICATION_JSON);
-	    return restTemplate.exchange(RESOURCE_URL, HttpMethod.POST, new HttpEntity<Message>(msg, headers), Message.class);
+		ResponseEntity<String> response = restTemplate.exchange(RESOURCE_URL, HttpMethod.POST, new HttpEntity<Message>(msg, headers), String.class);
+		if (response.getStatusCode() == HttpStatus.CREATED) {
+			String id = response.getHeaders().getLocation().toString();
+			id = id.substring(id.lastIndexOf('/') + 1);
+			return ResponseEntity.status(response.getStatusCode()).body(id);
+		}
+		return response;
 	}
 	
 	private ResponseEntity<Message> getMessage(long id) throws Exception {
