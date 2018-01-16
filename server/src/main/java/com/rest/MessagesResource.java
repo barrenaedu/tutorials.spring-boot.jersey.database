@@ -3,6 +3,7 @@ package com.rest;
 import com.domain.Message;
 import com.service.MessageManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -14,6 +15,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import java.util.Collection;
 
 @Path("/messages")
+@Component
 public class MessagesResource implements ExceptionMapper<Throwable> {
     private final MessageManager messageManager;
     private int counter;
