@@ -6,12 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
+import java.net.URI;
 import java.util.Collection;
 
 @Path("/messages")
@@ -30,7 +28,7 @@ public class MessagesResource implements ExceptionMapper<Throwable> {
     public Response createMessage(Message msg, @Context UriInfo uriInfo) {
         long id = messageManager.createMessage(msg);
         return Response.status(Status.CREATED)
-                .header("Location", uriInfo.getAbsolutePath() + "/" + id)
+                .location(URI.create(uriInfo.getAbsolutePath() + "/" + id))
                 .build();
     }
 
