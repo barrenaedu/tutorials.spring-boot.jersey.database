@@ -11,9 +11,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-       <!-- <version>1.5.3.RELEASE</version>
-       -->
-        <version>1.5.3.RELEASE</version>
+         <version>1.5.3.RELEASE</version>
     </parent>
 
     <properties>
@@ -75,10 +73,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
 
             <!-- JDK Compiler Level -->
             <plugin>

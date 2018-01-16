@@ -18,7 +18,6 @@ import java.util.Collection;
 @Component
 public class MessagesResource implements ExceptionMapper<Throwable> {
     private final MessageManager messageManager;
-    private int counter;
 
     @Autowired
     public MessagesResource(MessageManager messageManager) {
@@ -40,58 +39,49 @@ public class MessagesResource implements ExceptionMapper<Throwable> {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response updateMessage(@PathParam("id") long id, Message msg) {
-        try {
-            if (msg.getId() != id) {
-                throw new IllegalArgumentException("Object id cannot be different than the parameter id");
-            }
-            Message dbMsg = messageManager.getMessage(id);
-            if (dbMsg == null) {
-                throw new IllegalArgumentException(String.format("Message id '%d' does not exists!", id));
-            }
-            messageManager.updateMessage(msg);
-            return Response.status(Status.OK).build();
-        } catch (Exception e) {
-            return Response.status(Status.NOT_FOUND)
-                    .entity(e.getMessage())
+        if (msg.getId() != id) {
+            return Response.status(Status.CONFLICT)
+                    .entity("Object id cannot be different than the parameter id")
                     .type(MediaType.APPLICATION_JSON)
                     .build();
         }
+        Message dbMsg = messageManager.getMessage(id);
+        if (dbMsg == null) {
+            return Response.status(Status.NOT_FOUND)
+                    .entity(String.format("Message id '%d' does not exists!", id))
+                    .type(MediaType.APPLICATION_JSON)
+                    .build();
+        }
+        messageManager.updateMessage(msg);
+        return Response.status(Status.OK).build();
     }
 
     @DELETE
     @Path("/{id}")
     public Response deleteMessage(@PathParam("id") long id) {
-        try {
-            Message msg = messageManager.getMessage(id);
-            if (msg == null) {
-                throw new Exception(String.format("Message id '%d' does not exists!", id));
-            }
-            messageManager.deleteMessage(msg.getId());
-            return Response.status(Status.OK).build();
-        } catch (Exception e) {
+        Message msg = messageManager.getMessage(id);
+        if (msg == null) {
             return Response.status(Status.NOT_FOUND)
-                    .entity(e.getMessage())
+                    .entity(String.format("Message id '%d' does not exists!", id))
                     .type(MediaType.APPLICATION_JSON)
                     .build();
         }
+        messageManager.deleteMessage(msg.getId());
+        return Response.status(Status.OK).build();
     }
 
     @GET
     @Path("/{id}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response getMessage(@PathParam("id") long id) {
-        try {
-            Message msg = messageManager.getMessage(id);
-            if (msg == null) {
-                throw new Exception(String.format("Message id '%d' does not exists!", id));
-            }
-            return Response.status(Status.OK).entity(msg).build();
-        } catch (Exception e) {
+        Message msg = messageManager.getMessage(id);
+        if (msg == null) {
             return Response.status(Status.NOT_FOUND)
-                    .entity(e.getMessage())
+                    .entity(String.format("Message id '%d' does not exists!", id))
                     .type(MediaType.APPLICATION_JSON)
                     .build();
         }
+        return Response.status(Status.OK).entity(msg).build();
     }
 
     @GET
@@ -99,14 +89,6 @@ public class MessagesResource implements ExceptionMapper<Throwable> {
     public Response getMessages() {
         Collection<Message> msgs = messageManager.getMessages();
         return Response.status(Status.OK).entity(msgs.toArray(new Message[msgs.size()])).build();
-    }
-
-    @GET
-    @Path("/counter")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public Response getCounter() {
-        counter++;
-        return Response.status(Status.OK).entity(counter).build();
     }
 
     @Override
